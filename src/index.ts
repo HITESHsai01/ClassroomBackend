@@ -3,6 +3,7 @@ import subjectRouter from './routes/subjects';
 import cors from "cors";
 const app = express();
 
+if(process.env.FRONTEND_URL) throw new Error("FRONTEND_URL is missing");
 
 app.use(express.json());
 
