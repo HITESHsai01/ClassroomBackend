@@ -1,0 +1,66 @@
+import type{Response,Request, NextFunction } from 'express';
+import aj from '../config/arcject'
+import { ArcjetNodeRequest, ArcjetRequest, slidingWindow } from '@arcjet/node';
+
+const securityMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+  if(process.env.NODE_ENV === 'test') return next();
+
+  try {
+    const role: RateLimitRole = req.user?.role?? 'guest';
+
+    let limit:number;
+    let message:string;
+
+    switch (role) {
+      case 'admin':
+        limit=20;
+        message='Admin request limit exceeded please wait.';
+        break;
+      case 'teacher':
+        limit=10;
+        message='Teacher request limit exceeded, please wait.';
+        break;
+      case 'student':
+        limit=10;
+        message='Student request limit exceeded please wait.';
+        break;
+      default:
+        limit=5;
+        message='limit exceeded pls signup for extra limit';
+    }
+
+    const client = aj.withRule(
+      slidingWindow({
+        max:limit,
+        interval:'1m',
+        mode:"LIVE",
+      })
+    )
+
+    const arcjetRequest : ArcjetNodeRequest = {
+      headers: req.headers,
+      method:req.method,
+      url:req.originalUrl ?? req.url,
+      socket:{remoteAddress:req.socket.remoteAddress ?? req.ip ?? '0.0.0.0'},
+    }
+
+    const decision = await client.protect(arcjetRequest);
+
+    if(decision.isDenied() && decision.reason.isBot()){
+      return res.status(403).json({error:'Forbidden',message:'Automated request is not allowed'})
+    }
+    if(decision.isDenied() && decision.reason.isShield()){
+      return res.status(403).json({error:'Forbidden',message:'Request blocked by security policy'})
+    }
+    if(decision.isDenied() && decision.reason.isRateLimit()) {
+      return res.status(429).json({ error: 'Too many request incoming', message })
+    }
+
+    next();
+  }catch (err){
+    console.error("Arcjet middleware error:",err);
+    res.status(500).send({error:'internal error',message:"Something went wrong in Arcjet"});
+  }
+}
+
+export default securityMiddleware;
