@@ -14,12 +14,15 @@ const securityMiddleware = async (req: Request, res: Response, next: NextFunctio
     switch (role) {
       case 'admin':
         limit=20;
-        message='Admin request limit exceeded pls wait.';
+        message='Admin request limit exceeded please wait.';
         break;
       case 'teacher':
+        limit=10;
+        message='Teacher request limit exceeded, please wait.';
+        break;
       case 'student':
         limit=10;
-        message='Student request limit exceeded pls wait.';
+        message='Student request limit exceeded please wait.';
         break;
       default:
         limit=5;
@@ -45,13 +48,12 @@ const securityMiddleware = async (req: Request, res: Response, next: NextFunctio
 
     if(decision.isDenied() && decision.reason.isBot()){
       return res.status(403).json({error:'Forbidden',message:'Automated request is not allowed'})
-
     }
     if(decision.isDenied() && decision.reason.isShield()){
       return res.status(403).json({error:'Forbidden',message:'Request blocked by security policy'})
     }
     if(decision.isDenied() && decision.reason.isRateLimit()) {
-      return res.status(403).json({ error: 'Too many request incoming', message })
+      return res.status(429).json({ error: 'Too many request incoming', message })
     }
 
     next();
