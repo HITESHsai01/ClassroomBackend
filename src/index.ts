@@ -3,10 +3,12 @@ AgentAPI.config();
 
 import express from "express";
 import subjectRouter from './routes/subjects.js';
+import userRouter from './routes/users.js';
 import cors from "cors";
 import securityMiddleware from './middleware/security.js';
 import { auth } from './lib/auth.js';
 import { toNodeHandler } from 'better-auth/node';
+import classRouter from './routes/classes.js'
 
 const app = express();
 
@@ -25,6 +27,8 @@ app.use(express.json());
 app.use(securityMiddleware);
 
 app.use('/api/subjects',subjectRouter)
+app.use('/api/users', userRouter)
+app.use('/api/classes',classRouter)
 
 app.get("/", (req, res) => {
   res.send("Hello from TypeScript server!");
