@@ -9,6 +9,9 @@ import securityMiddleware from './middleware/security.js';
 import { auth } from './lib/auth.js';
 import { toNodeHandler } from 'better-auth/node';
 import classRouter from './routes/classes.js'
+import departmentsRouter from "./routes/departments.js";
+import statsRouter from "./routes/stats.js";
+import enrollmentsRouter from "./routes/enrollments.js";
 
 const app = express();
 
@@ -29,6 +32,9 @@ app.use(securityMiddleware);
 app.use('/api/subjects',subjectRouter)
 app.use('/api/users', userRouter)
 app.use('/api/classes',classRouter)
+app.use("/api/departments", departmentsRouter);
+app.use("/api/stats", statsRouter);
+app.use("/api/enrollments", enrollmentsRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello from TypeScript server!");
