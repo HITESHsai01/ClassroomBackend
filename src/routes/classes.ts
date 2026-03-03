@@ -244,6 +244,7 @@ router.get("/:id/users", async (req, res) => {
       },
     });
   } catch (error) {
+
     console.error("GET /classes/:id/users error:", error);
     res.status(500).json({ error: "Failed to fetch class users" });
   }
